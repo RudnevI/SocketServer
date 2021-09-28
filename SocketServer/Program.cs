@@ -22,14 +22,16 @@ namespace SocketServer
             Socket listener = new Socket(iPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
 
-            try
-            {
-                listener.Bind(ipEndPoint);
-                listener.Listen(10);
 
-                while(true)
+            listener.Bind(ipEndPoint);
+            listener.Listen(10);
+
+            Socket handler = listener.Accept();
+            while (true)
+            {
+                try
                 {
-                    Socket handler = listener.Accept();
+
                     string data = null;
 
                     byte[] bytes = new byte[1024];
@@ -43,21 +45,26 @@ namespace SocketServer
                     byte[] replyMsg = Encoding.UTF8.GetBytes(reply);
 
                     handler.Send(replyMsg);
-                    
-                    if(data.IndexOf("<eof>") > -1)
+
+                    if (data.IndexOf("<eof>") > -1)
                     {
                         Console.WriteLine("Server closed connection with client");
                         break;
                     }
 
                     handler.Shutdown(SocketShutdown.Both);
+
+                }
+                catch (SocketException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                finally
+                {
                     handler.Close();
                 }
             }
-            catch (Exception e) 
-            {
-                Console.WriteLine(e.Message);
-            } 
+
 
         }
     }
